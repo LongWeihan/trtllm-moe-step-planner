@@ -1,0 +1,94 @@
+[TensorRT-LLM] TensorRT LLM version: 1.2.1
+[TensorRT-LLM][INFO] Engine version 1.2.1 found in the config file, assuming engine(s) built by new builder API.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Using C++ session
+[TensorRT-LLM][INFO] Engine version 1.2.1 found in the config file, assuming engine(s) built by new builder API.
+[TensorRT-LLM][INFO] MPI size: 1, MPI local size: 1, rank: 0
+[04/24/2026-05:30:36] [TRT-LLM] [W] Implicitly setting QWenConfig.seq_length = 8192
+[04/24/2026-05:30:36] [TRT-LLM] [W] Implicitly setting QWenConfig.qwen_type = qwen2_moe
+[04/24/2026-05:30:36] [TRT-LLM] [W] Implicitly setting QWenConfig.moe_intermediate_size = 1408
+[04/24/2026-05:30:36] [TRT-LLM] [W] Implicitly setting QWenConfig.moe_shared_expert_intermediate_size = 5632
+[04/24/2026-05:30:36] [TRT-LLM] [W] Implicitly setting QWenConfig.tie_word_embeddings = False
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.dtype to float16.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.bert_attention_plugin to auto.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.gpt_attention_plugin to auto.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.gemm_plugin to float16.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.gemm_swiglu_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.fp8_rowwise_gemm_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.qserve_gemm_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.identity_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.nccl_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.lora_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.dora_plugin to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.weight_only_groupwise_quant_matmul_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.weight_only_quant_matmul_plugin to float16.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.smooth_quant_plugins to True.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.smooth_quant_gemm_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.layernorm_quantization_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.rmsnorm_quantization_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.quantize_per_token_plugin to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.quantize_tensor_plugin to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.moe_plugin to auto.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.mamba_conv1d_plugin to auto.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.low_latency_gemm_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.low_latency_gemm_swiglu_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.gemm_allreduce_plugin to None.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.context_fmha to True.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.bert_context_fmha_fp32_acc to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.paged_kv_cache to True.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.remove_input_padding to True.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.norm_quant_fusion to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.reduce_fusion to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.user_buffer to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.tokens_per_block to 32.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.use_paged_context_fmha to True.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.use_fp8_context_fmha to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.fuse_fp4_quant to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.multiple_profiles to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.paged_state to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.streamingllm to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.manage_weights to False.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.use_fused_mlp to True.
+[04/24/2026-05:30:36] [TRT-LLM] [I] Set PluginConfig.pp_reduce_scatter to False.
+[TensorRT-LLM][INFO] Engine version 1.2.1 found in the config file, assuming engine(s) built by new builder API.
+[TensorRT-LLM][INFO] Refreshed the MPI local session
+[TensorRT-LLM][INFO] MPI size: 1, MPI local size: 1, rank: 0
+[TensorRT-LLM][INFO] Rank 0 is using GPU 0
+[TensorRT-LLM][INFO] TRTGptModel maxNumSequences: 1
+[TensorRT-LLM][INFO] TRTGptModel maxBatchSize: 1
+[TensorRT-LLM][INFO] TRTGptModel maxBeamWidth: 1
+[TensorRT-LLM][INFO] TRTGptModel maxSequenceLen: 256
+[TensorRT-LLM][INFO] TRTGptModel maxDraftLen: 0
+[TensorRT-LLM][INFO] TRTGptModel mMaxAttentionWindowSize: (256) * 24
+[TensorRT-LLM][INFO] TRTGptModel enableTrtOverlap: 0
+[TensorRT-LLM][INFO] TRTGptModel normalizeLogProbs: 1
+[TensorRT-LLM][INFO] TRTGptModel maxNumTokens: 512
+[TensorRT-LLM][INFO] TRTGptModel maxInputLen: 255 = min(maxSequenceLen - 1, maxNumTokens) since context FMHA and usePackedInput are enabled
+[TensorRT-LLM][INFO] TRTGptModel If model type is encoder, maxInputLen would be reset in trtEncoderModel to maxInputLen: min(maxSequenceLen, maxNumTokens).
+[TensorRT-LLM][INFO] Capacity Scheduler Policy: GUARANTEED_NO_EVICT
+[TensorRT-LLM][INFO] Context Chunking Scheduler Policy: None
+[TensorRT-LLM][INFO] Loaded engine size: 7763 MiB
+[TensorRT-LLM][INFO] Engine load time 13146 ms
+[TensorRT-LLM][INFO] Inspecting the engine to identify potential runtime issues...
+[TensorRT-LLM][INFO] The profiling verbosity of the engine does not allow this analysis to proceed. Re-build the engine with 'detailed' profiling verbosity to get more diagnostics.
+[TensorRT-LLM][INFO] [MemUsageChange] Allocated 55.03 MiB for execution context memory.
+[TensorRT-LLM][INFO] gatherContextLogits: 0
+[TensorRT-LLM][INFO] gatherGenerationLogits: 0
+[TensorRT-LLM][INFO] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +0, now: CPU 0, GPU 7757 (MiB)
+[TensorRT-LLM][INFO] [MemUsageChange] Allocated 598.56 KB GPU memory for runtime buffers.
+[TensorRT-LLM][INFO] [MemUsageChange] Allocated 2.96 MB GPU memory for decoder.
+[TensorRT-LLM][INFO] Memory usage when calculating max tokens in paged kv cache: total: 16.00 GiB, available: 7.20 GiB
+[TensorRT-LLM][INFO] Blocks per window size:
+[TensorRT-LLM][INFO] [windowSize=256] {.primaryBlocks=1107, .secondayBlocks=0}
+[TensorRT-LLM][INFO] Max KV cache blocks per sequence: 8 [window size=256], tokens per block=32, primary blocks=1107, secondary blocks=0, max sequence length=256
+[TensorRT-LLM][INFO] Number of tokens per block: 32.
+[TensorRT-LLM][INFO] [MemUsageChange] Allocated 6.49 GiB for max tokens in paged KV cache (35424).
+[TensorRT-LLM][INFO] CacheTransceiver is disabled.
+[04/24/2026-05:30:50] [TRT-LLM] [I] Load engine takes: 14.099768877029419 sec
+[TensorRT-LLM][INFO] Refreshed the MPI local session
+Input [Text 0]: "<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Explain why MoE routing skew can create decode tail latency.<|im_end|>
+<|im_start|>assistant
+"
+Output [Text 0 Beam 0]: "MoE (Multi-Access Edge) routing skew can create decode tail latency because of the way it processes incoming packets. MoE is a technique used in networking"
