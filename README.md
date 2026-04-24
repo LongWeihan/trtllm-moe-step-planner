@@ -1,5 +1,10 @@
 # TRT-LLM MoE Step Planner
 
+[![NVIDIA TensorRT-LLM](https://img.shields.io/badge/NVIDIA-TensorRT--LLM-76B900?logo=nvidia&logoColor=white)](https://github.com/NVIDIA/TensorRT-LLM)
+[![MoE Inference](https://img.shields.io/badge/MoE-Inference-0B7285)](#overview)
+[![Runtime Scheduling](https://img.shields.io/badge/Runtime-Scheduling-495057)](#design)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+
 Pressure-aware step planning for TensorRT-LLM MoE inference.
 
 ## Overview
