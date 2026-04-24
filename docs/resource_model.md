@@ -1,6 +1,6 @@
 # Runtime Resource Model
 
-The 24h version adds a minimal planning layer between active requests and the TRT-LLM micro-batch scheduler.
+The compact version adds a minimal planning layer between active requests and the TRT-LLM micro-batch scheduler.
 
 ## Request Profile
 

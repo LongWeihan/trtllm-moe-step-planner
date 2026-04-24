@@ -7,7 +7,7 @@ Machine-readable tables:
 
 ## Headline
 
-The project met the 24h objective:
+The project met the initial objective:
 
 - real Qwen MoE model path ran end to end
 - a minimal TRT-LLM runtime resource model was implemented

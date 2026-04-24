@@ -2,7 +2,7 @@
 
 ## What changed
 
-The 24h implementation adds a minimal planning layer and a MoE-aware scheduler patch:
+The compact implementation adds a minimal planning layer and a MoE-aware scheduler patch:
 
 - [scheduler/resource_model.py](C:/26spring/nv项目/trtllm-moe-runtime-exp/scheduler/resource_model.py)
 - [scheduler/moe_microbatch_scheduler.py](C:/26spring/nv项目/trtllm-moe-runtime-exp/scheduler/moe_microbatch_scheduler.py)
@@ -28,9 +28,9 @@ The patch is implemented on the TRT-LLM 1.2.1 PyTorch backend seam:
 
 This is the architectural proof that the work targets TRT-LLM internals rather than an external toy scheduler.
 
-## Quantitative experiment seam
+## Quantitative evaluation path
 
-Because the PyTorch backend could not run the needed quantized MoE model path directly on this machine, the quantitative experiments executed the same step-planning logic over the real TensorRT engine backend:
+Because the PyTorch backend could not run the needed quantized MoE model path directly on this machine, the quantitative evaluation executed the same step-planning logic over the real TensorRT engine backend:
 
 - baseline:
   - fixed contiguous microbatches of 4

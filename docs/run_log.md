@@ -22,7 +22,7 @@
   - `workloads/balanced_moe.jsonl`
   - `workloads/hot_expert.jsonl`
   - `workloads/hot_rank.jsonl`
-- Ran baseline and patched experiments on:
+- Ran baseline and patched evaluations on:
   - `Balanced MoE` (`SMOKE`/short full set)
   - `Hot-Expert` (`PILOT`, then `FULL`)
   - `Hot-Rank` (`PILOT`)

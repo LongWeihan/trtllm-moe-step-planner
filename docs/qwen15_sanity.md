@@ -2,7 +2,7 @@
 
 ## Sanity goals
 
-Before running any workload experiments, the project needed to prove three things:
+Before running workload evaluations, the project needed to prove three things:
 
 1. TRT-LLM imports successfully on this machine.
 2. The INT4 weight-only engine loads.

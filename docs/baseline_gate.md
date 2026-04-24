@@ -4,7 +4,7 @@
 
 The baseline gate decides whether the project is ready to move from bring-up into the actual scheduler comparison.
 
-For the 24h version, the gate required:
+For the compact version, the gate required:
 
 - `Balanced MoE` `SMOKE`
 - `Hot-Expert` `PILOT`
@@ -48,4 +48,4 @@ Reason:
 
 - more direct alignment with the project story of MoE pressure and batch stragglers
 - clear p90 E2E improvement in the pilot compare
-- easy to explain in an interview
+- simple enough to audit

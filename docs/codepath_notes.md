@@ -31,7 +31,7 @@ The least invasive patch seam for this project is:
 2. Monkey-patch `BindMicroBatchScheduler` with a subclass that consumes a local runtime resource model.
 3. Leave `CapacityScheduler` as-is for the main path; optional guard stays a stretch goal.
 
-## Real experimental split
+## Runtime validation split
 
 There are two paths in the final project:
 

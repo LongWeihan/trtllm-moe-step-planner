@@ -1,6 +1,6 @@
 # Pressure Classes
 
-The 24h version uses three explicit pressure classes.
+The compact version uses three explicit pressure classes.
 
 ## `balanced`
 
@@ -25,6 +25,6 @@ The 24h version uses three explicit pressure classes.
 This is intentionally not a kernel-time predictor.  
 It is a scheduling signal model:
 
-- simple enough to ship in 24h,
+- simple enough to ship quickly,
 - expressive enough to produce a budgeted step plan,
-- easy to explain in an interview.
+- simple enough to audit.

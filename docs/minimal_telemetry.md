@@ -1,6 +1,6 @@
 # Minimal Telemetry
 
-This project keeps telemetry intentionally small for the 24h run:
+This project keeps telemetry intentionally small for the validated run:
 
 - `step_name`
 - `context_request_ids`
