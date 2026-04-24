@@ -1,196 +1,203 @@
 # TRT-LLM MoE Step Planner
 
-Pressure-aware runtime step planning for Mixture-of-Experts inference on TensorRT-LLM, evaluated on a fixed `Qwen/Qwen1.5-MoE-A2.7B-Chat` `INT4 weight-only` engine path.
+Pressure-aware step formation for Mixture-of-Experts inference on TensorRT-LLM.
 
-## Abstract
+## Overview
 
-This repository studies a narrow but important runtime problem in MoE serving: requests with different routing behavior do not contribute equally to batch cost, and default batching policies do not explicitly model that asymmetry. The project introduces a minimal runtime resource model and a pressure-aware step planner that attempts to reduce decode-tail latency by preventing high-pressure MoE requests from stacking in the same execution step.
+`TRT-LLM MoE Step Planner` is a focused runtime optimization project for MoE inference. It addresses a specific systems problem: default batch formation is generally aware of fit, but not of MoE-specific contention structure.
 
-The implementation is deliberately small in scope:
-
-- it does not modify model weights
-- it does not replace TensorRT-LLM kernels
-- it does not introduce an external serving system
-
-Instead, it adds a planner layer around real TensorRT-LLM execution and validates the effect on real engine runs.
-
-## Problem Statement
-
-For dense models, batch cost is often approximated primarily by token count, prompt length, and memory fit. For MoE models, this is incomplete. Routing skew induces additional runtime interference:
+For dense models, token count, prompt length, and memory pressure are often sufficient scheduling signals. For MoE models, those signals are incomplete. Two requests with similar lengths can still have very different runtime impact when routing skew creates:
 
 - expert hotspots
 - rank hotspots
-- larger per-step variance
-- longer decode tails
+- decode tail amplification
 - batch stragglers
+- larger per-step latency variance
 
-The practical consequence is that two requests with similar token lengths may behave very differently once their routed experts concentrate contention into the same step.
+This project introduces a narrow planning layer that makes MoE pressure explicit in the runtime decision path and uses it to form safer execution steps.
 
-## Design Objective
+## Scope
 
-The objective of this project is to make MoE pressure explicit in the runtime decision path:
+This repository is intentionally narrow in scope.
 
-1. estimate per-request pressure
-2. aggregate it into a step-level resource view
-3. build a step plan that limits pressure stacking
-4. validate the effect on real TensorRT engine execution
+It does **not**:
 
-## Method
+- modify model weights
+- replace TensorRT-LLM kernels
+- introduce an external serving stack
 
-### 1. Pressure Representation
+It **does**:
 
-Implemented in [`scheduler/moe_pressure.py`](scheduler/moe_pressure.py).
+1. estimate request-level pressure
+2. construct an explicit runtime budget
+3. build a pressure-aware step plan
+4. validate the plan on the real TensorRT engine path
 
-Each request is assigned a pressure class and score:
+The resulting policy is intentionally latency-oriented. Its purpose is to reduce pressure collisions inside a step, even if that sometimes reduces effective batch size.
 
-- `balanced`
-- `hot_expert`
-- `hot_rank`
+## Architecture
 
-This abstraction is intentionally simple. The goal is not to reconstruct the router in detail, but to create a stable scheduling signal that is easy to consume downstream.
+```text
+request metadata
+    |
+    v
+pressure model
+    |
+    v
+request profile
+    |
+    v
+runtime budget
+    |
+    v
+step plan
+    |
+    v
+TensorRT-LLM engine execution
+    |
+    +--> telemetry
+    +--> result metrics
+```
 
-### 2. Runtime Resource Model
+The key engineering decision is that pressure is treated as a schedulable runtime resource rather than as an explanatory label attached after execution.
 
-Implemented in [`scheduler/resource_model.py`](scheduler/resource_model.py).
+## Design Principles
 
-The resource model adds three explicit objects:
+### Keep the integration narrow
+
+The project stays close to TensorRT-LLM runtime behavior. The change is about step planning, not about rebuilding the executor or competing with optimized kernels.
+
+### Make scheduling inputs explicit
+
+The planner is structured as:
+
+`request metadata -> runtime model -> planning decision -> execution`
+
+This makes the scheduling logic inspectable and composable.
+
+### Optimize the failure mode that matters
+
+For hotspot-heavy MoE traffic, the main failure mode is unstable step composition and tail inflation. This project is intentionally biased toward step stability and tail control.
+
+### Preserve a real execution path
+
+All reported numbers come from the real TensorRT engine path, not from a simulator.
+
+## Runtime Model
+
+The central systems assumption is that MoE step cost has two parts:
+
+```text
+step_latency(batch)
+  =
+  compute_cost(token_volume)
+  +
+  contention_cost(pressure, skew)
+```
+
+Where:
+
+- `compute_cost` is mostly token-driven
+- `contention_cost` increases as expert or rank concentration rises
+
+The planner is effective if two conditions hold:
+
+1. contention increases with aggregate pressure
+2. contention grows disproportionately once several hot requests are stacked into the same step
+
+Under those conditions, dispersing hot requests across steps reduces tail risk, even if average batch size falls. That is the exact tradeoff this repository is designed to surface.
+
+## Core Components
+
+### [`scheduler/moe_pressure.py`](scheduler/moe_pressure.py)
+
+Purpose:
+
+- normalize MoE-specific runtime pressure into a stable scheduling signal
+
+Why it was introduced:
+
+- default batching has no first-class representation of MoE pressure
+
+What it adds:
+
+- pressure classes: `balanced`, `hot_expert`, `hot_rank`
+- scalar pressure scores that can be aggregated at step level
+
+### [`scheduler/resource_model.py`](scheduler/resource_model.py)
+
+Purpose:
+
+- convert raw request metadata into an explicit runtime planning contract
+
+Why it was introduced:
+
+- planning quality degrades quickly when scheduling assumptions stay implicit
+
+What it adds:
 
 - `RequestProfile`
 - `RuntimeBudget`
 - `StepPlan`
 
-This changes the scheduler interface from “pick the next few requests” to:
-
-`request metadata -> resource model -> step plan -> execution`
-
-That explicit contract matters because it separates signal extraction from scheduling action.
-
-### 3. Pressure-Aware Step Planning
-
-Implemented in [`scheduler/moe_microbatch_scheduler.py`](scheduler/moe_microbatch_scheduler.py) and executed quantitatively through [`scripts/run_patched.py`](scripts/run_patched.py).
-
-The planner is decode-first and pressure-aware:
-
-- generation requests are considered before context requests
-- aggregate pressure is bounded at the step level
-- hot requests are dispersed across steps when necessary
-
-In practice, this means the planner is willing to reduce effective batch size if that is what it takes to avoid a high-pressure collision.
-
-## Why These Changes Should Work
-
-The project is based on a simple runtime argument rather than a claim about TensorRT-LLM internals being analytically solved.
-
-Let:
-
-- `p_i` be the pressure score of request `i`
-- `P(B) = sum(p_i)` be the total pressure of batch `B`
-- `T(B)` be the token-related compute cost of batch `B`
-
-Assume step latency can be decomposed as:
-
-```text
-L(B) = L_compute(T(B)) + L_contention(P(B), skew(B))
-```
-
-where:
-
-- `L_compute` is mostly token-driven
-- `L_contention` captures expert/rank interference
-
-The relevant scheduling assumption is:
-
-1. `L_contention` is increasing with pressure
-2. near hotspot regions, `L_contention` is approximately convex
-
-Under these assumptions, stacking several hot requests into one step increases tail risk superlinearly. Dispersing those requests across steps reduces extreme latency, even if it gives up some batching efficiency. This is exactly the tradeoff observed in the experiments:
-
-- lower TTFT / E2E tail latency
-- reduced step variance
-- lower throughput when isolation becomes too aggressive
-
-This is not a proof of optimality for the engine, but it is a sound scheduler rationale under a standard monotonicity-plus-convexity contention model.
-
-## What Was Changed and Why
-
-### [`scheduler/moe_pressure.py`](scheduler/moe_pressure.py)
-
-Reason for change:
-
-- default scheduling does not have a first-class MoE pressure signal
-
-What it adds:
-
-- stable request-level pressure labels
-- scalar pressure scores that can be composed at the batch level
-
-### [`scheduler/resource_model.py`](scheduler/resource_model.py)
-
-Reason for change:
-
-- scheduling logic is easier to reason about when resource assumptions are explicit
-
-What it adds:
-
-- request profiling
-- budget construction
-- step-plan generation
-
 ### [`scheduler/moe_microbatch_scheduler.py`](scheduler/moe_microbatch_scheduler.py)
 
-Reason for change:
+Purpose:
 
-- the runtime needs a path that can consume pressure rather than treating all requests as equivalent once they fit
+- turn pressure-aware runtime state into a concrete execution order
+
+Why it was introduced:
+
+- requests that merely “fit” are not necessarily safe to batch together in MoE serving
 
 What it adds:
 
-- pressure-aware ordering
-- step-level dispersion
-- integration seam aligned with TensorRT-LLM scheduling concepts
+- decode-first planning
+- pressure-aware dispersion
+- step-level selection logic aligned with TensorRT-LLM scheduling concepts
 
 ### [`scheduler/telemetry.py`](scheduler/telemetry.py)
 
-Reason for change:
+Purpose:
 
-- the project needs evidence that the planner is changing step composition, not only end metrics
+- make step composition observable
+
+Why it was introduced:
+
+- end metrics alone do not explain whether the planner actually changed batch structure
 
 What it adds:
 
-- structured JSONL telemetry for step contents and deferred requests
+- JSONL telemetry for scheduled requests, deferred requests, and planned pressure
 
 ### [`scripts/run_patched.py`](scripts/run_patched.py)
 
-Reason for change:
+Purpose:
 
-- the planner must be evaluated on real engine execution, not on a simulator
+- execute the planner on the real engine path
 
-What it adds:
+Why it was introduced:
 
-- execution of the same planning logic against the TensorRT engine path
-- telemetry collection
-- reproducible baseline-versus-patched comparison
+- the planner must be measured where its batch decisions actually matter
 
-## Experimental Setup
+## Evaluation
 
-- Model: `Qwen/Qwen1.5-MoE-A2.7B-Chat`
-- Quantization: TensorRT-LLM `INT4 weight-only`
-- Hardware: `RTX 4060 Ti 16GB`
-
-Workloads:
+### Workloads
 
 - `Balanced MoE`
 - `Hot-Expert`
 - `Hot-Rank`
 - `Hot-Expert` 24-request full run
 
-Baselines:
+### Validation environment
 
-- default engine batching
-- pressure-aware patched path
+The reported measurements were collected on:
 
-## Results
+- model: `Qwen/Qwen1.5-MoE-A2.7B-Chat`
+- quantization: TensorRT-LLM `INT4 weight-only`
+- hardware: `RTX 4060 Ti 16GB`
 
-### Summary Table
+### Results
 
 | Workload | Metric | Baseline | Patched | Delta |
 | --- | --- | ---: | ---: | ---: |
@@ -204,39 +211,39 @@ Baselines:
 | Hot-Rank | E2E p90 | `1.9942s` | `1.7115s` | `-0.2827s` |
 | Hot-Expert (24 req) | TTFT p90 | `0.0733s` | `0.0111s` | `-0.0622s` |
 | Hot-Expert (24 req) | E2E p90 | `1.8348s` | `1.5983s` | `-0.2365s` |
+| Hot-Expert (24 req) | Throughput | `310.44 tok/s` | `99.81 tok/s` | `-210.63 tok/s` |
 
-### Interpretation
+### What the data supports
 
-The balanced control shows that the planner does not introduce an obvious regression on non-hot traffic. The hot workloads show the intended behavior clearly:
+The data supports three conclusions:
 
-- TTFT tail improves sharply
-- E2E tail improves materially
-- TPOT improves modestly
-- throughput falls because the policy isolates pressure aggressively
+1. The planner does not introduce an obvious regression on the balanced control.
+2. On hotspot-heavy workloads, the planner materially reduces TTFT and E2E tail latency.
+3. The current policy is deliberately aggressive and trades throughput for tail control.
 
-In other words, this repository demonstrates a successful latency-first MoE pressure isolation policy.
+This repository is therefore best understood as a successful latency-first MoE pressure isolation policy.
 
 ## Limitations
 
-The central limitation is explicit:
+The main limitation is explicit:
 
-- the quantitative benchmark uses the real TensorRT engine backend with the planner applied to batch composition
-- the internal runtime seam work is real
+- the quantitative benchmark runs on the real TensorRT engine backend
+- the planning logic is applied through batch composition on that path
 - the final measured comparison is therefore not a pure in-backend PyTorch quantitative benchmark
 
-This limitation does not invalidate the measured result, but it does define its scope.
+That limitation narrows the scope of the claim, but it does not invalidate the runtime measurements reported here.
 
-## Repository Structure
+## Repository Layout
 
-- [`scheduler/`](scheduler): runtime resource model, pressure model, planner, telemetry
-- [`scripts/`](scripts): workload generation, execution drivers, summarization
-- [`workloads/`](workloads): fixed MoE workloads used in the study
-- [`results/`](results): raw outputs and comparison tables
-- [`docs/`](docs): detailed notes, result summary, and final report
+- [`scheduler/`](scheduler) - runtime model, pressure model, planner, telemetry
+- [`scripts/`](scripts) - workload generation, execution drivers, summarization
+- [`workloads/`](workloads) - fixed MoE workloads
+- [`results/`](results) - raw outputs and compare tables
+- [`docs/`](docs) - supporting notes, summary documents, final report
 
 ## Reproducibility
 
-Core commands:
+Core flow:
 
 ```bash
 python scripts/generate_workloads.py
@@ -245,7 +252,7 @@ python scripts/run_patched.py ...
 python scripts/summarize_results.py ...
 ```
 
-Reference material:
+Reference documents:
 
 - [`docs/final_report.md`](docs/final_report.md)
 - [`docs/result_summary.md`](docs/result_summary.md)
